@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Linieritas Guru Pro</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.10), 0 6px 6px rgba(0,0,0,0.15);
+        }
+
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding-bottom: 40px;
+        }
+
+        .main-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: -30px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: none;
+            box-shadow: var(--card-shadow);
+            margin-top: 0;
+            padding: 20px;
+        }
+
+        /* --- Filter Buttons --- */
+        .btn-filter-group .btn-check:checked + .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+        .btn-filter-group .btn {
+            border-radius: 50px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            transition: all 0.3s ease;
+            color: #555;
+            background: white;
+            font-weight: 600;
+        }
+        .btn-filter-group .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* --- TABLE STYLING BARU (WRAP TEXT & RESIZE) --- */
+        table.dataTable {
+            table-layout: fixed; /* Penting agar kolom menghargai lebar */
+            width: 100% !important;
+            border-collapse: collapse;
+        }
+
+        table.dataTable thead th {
+            background-color: #f8f9fa;
+            color: #444;
+            font-weight: 700;
+            border-bottom: 2px solid #667eea;
+            vertical-align: middle;
+            text-align: center;
+            /* Styling untuk header agar terlihat bisa digeser */
+            position: relative;
+        }
+
+        /* FITUR 1: AUTO WRAP TEXT */
+        table.dataTable tbody td {
+            white-space: normal !important; /* Paksa teks turun ke bawah */
+            word-wrap: break-word;          /* Potong kata jika terlalu panjang */
+            word-break: break-word;         /* Jaga agar tidak bablas */
+            vertical-align: top;            /* Teks mulai dari atas sel */
+            padding: 10px;
+        }
+
+        /* Styling Grip Resizer (Garis Geser) */
+        .JCLRgrip {
+            width: 5px !important;
+            background-color: transparent;
+            cursor: col-resize;
+        }
+        .JCLRgrip:hover {
+            background-color: #667eea; /* Muncul warna biru saat mau digeser */
+            opacity: 0.5;
+        }
+
+        /* --- MOBILE VIEW --- */
+        @media screen and (max-width: 768px) {
+            table.dataTable thead { display: none; }
+            table.dataTable, table.dataTable tbody, table.dataTable tr, table.dataTable td {
+                display: block;
+                width: 100%;
+            }
+            table.dataTable tbody tr {
+                margin-bottom: 15px;
+                background-color: #fff;
+                border-radius: 15px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                border: 1px solid rgba(0,0,0,0.05);
+                padding: 0;
+            }
+            table.dataTable tbody td {
+                text-align: right;
+                padding: 12px 15px;
+                border-bottom: 1px solid #f0f0f0;
+                /* Reset wrap logic untuk mobile card view agar rapi */
+                white-space: normal; 
+            }
+            table.dataTable tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 700;
+                color: #764ba2;
+            }
+            table.dataTable tbody td:first-child {
+                background: var(--primary-gradient);
+                color: white;
+                text-align: center;
+                padding: 8px;
+            }
+            table.dataTable tbody td:first-child::before { display: none; }
+            
+            .dataTables_length, .dt-buttons, .dataTables_filter {
+                text-align: center;
+                margin-bottom: 10px;
+            }
+        }
+
+        .dataTables_wrapper .dataTables_filter { margin-bottom: 0; }
+        .dt-buttons .btn { border-radius: 8px; font-size: 0.85rem; margin-right: 5px; }
+        .dataTables_length select { border-radius: 8px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <div class="main-header">
+        <h1 class="fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i> Cek Linieritas Guru</h1>
+        <p class="opacity-75">Data responsif dengan fitur Text-Wrap dan Resize Kolom</p>
+    </div>
+
+    <div class="container mb-5">
+        <div class="card glass-card">
+            
+            <div class="mb-4 text-center">
+                <p class="text-muted small fw-bold text-uppercase mb-2">Pilih Jenjang Sekolah</p>
+                <div class="btn-group btn-filter-group flex-wrap" role="group">
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSemua" value="" checked>
+                    <label class="btn" for="btnSemua">Semua</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnTK" value="I">
+                    <label class="btn" for="btnTK">TK/RA</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSD" value="II">
+                    <label class="btn" for="btnSD">SD</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSMP" value="III">
+                    <label class="btn" for="btnSMP">SMP</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSMA" value="IV">
+                    <label class="btn" for="btnSMA">SMA</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSMK" value="V">
+                    <label class="btn" for="btnSMK">SMK</label>
+                    <input type="radio" class="btn-check filter-jenjang" name="jenjang" id="btnSLB" value="VI">
+                    <label class="btn" for="btnSLB">SLB</label>
+                </div>
+            </div>
+
+            <div class="table-responsive-sm" style="overflow-x: auto;">
+                <table id="tabelGuru" class="table table-hover table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="25%">Bidang Studi Sertifikasi</th>
+                            <th width="10%">Kode</th>
+                            <th width="40%">Mata Pelajaran (Linier)</th>
+                            <th width="20%">Kurikulum</th>
+                            <th style="display:none;">Lampiran</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/colresizable/1.6.0/colResizable-1.6.min.js"></script>
+
+    <script src="database.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if (typeof dataGuru === 'undefined') {
+                alert("Database tidak ditemukan!");
+                return;
+            }
+
+            var table = $('#tabelGuru').DataTable({
+                data: dataGuru,
+                columns: [
+                    { data: null }, 
+                    { data: 'Nama & Kode Bidang Studi Sertifikasi' },
+                    { data: 'Kode_Text' },
+                    { data: 'Bidang Tugas / Mata Pelajaran' },
+                    { data: 'Kurikulum' },
+                    { data: 'Lampiran', visible: false }
+                ],
+                createdRow: function (row, data, dataIndex) {
+                    $('td', row).eq(1).attr('data-label', 'Bidang Studi');
+                    $('td', row).eq(2).attr('data-label', 'Kode');
+                    $('td', row).eq(3).attr('data-label', 'Mapel Linier');
+                    $('td', row).eq(4).attr('data-label', 'Kurikulum');
+                },
+                columnDefs: [
+                    { searchable: false, orderable: false, targets: 0 }
+                ],
+                lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "Semua"]],
+                dom: '<"row align-items-center mb-3 g-3"<"col-md-3 col-sm-12"l><"col-md-5 col-sm-12 text-center"B><"col-md-4 col-sm-12"f>>rtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' },
+                    { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn btn-danger btn-sm' }
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json',
+                    search: "",
+                    searchPlaceholder: "Ketik Mapel / Kode...",
+                    lengthMenu: "Tampilkan _MENU_"
+                },
+                // Aktifkan colResizable setelah tabel digambar
+                initComplete: function() {
+                    enableResize();
+                }
+            });
+
+            // Re-init auto numbering
+            table.on('order.dt search.dt', function () {
+                let i = 1;
+                table.column(0, {search:'applied', order:'applied'}).nodes().each(function (cell, k) {
+                    cell.innerHTML = i++;
+                });
+            }).draw();
+
+            // Filter logic
+            $('.filter-jenjang').on('change', function() {
+                var val = $(this).val();
+                var searchVal = val ? '^' + val + '$' : '';
+                table.column(5).search(searchVal, true, false).draw();
+            });
+
+            // --- FUNGSI UTAMA RESIZE ---
+            // Hanya aktif di Desktop (lebar > 768px)
+            function enableResize() {
+                if ($(window).width() > 768) {
+                    $("#tabelGuru").colResizable({
+                        liveDrag: true,
+                        gripInnerHtml: "<div class='grip'></div>", 
+                        draggingClass: "dragging", 
+                        resizeMode: 'overflow' // Mode geser
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
